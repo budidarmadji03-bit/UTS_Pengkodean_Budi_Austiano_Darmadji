@@ -1,12 +1,11 @@
-# UTS Pemrograman/Coding
+# UTS Pengkodean
 
 ## Voucher Entri Transaksi Kas Keluar
 
 **Nama:** Budi Austiano Darmadji  
 **NIM:** 12030124140215  
-**Program Studi:** S1 Akuntansi  
-**Universitas:** Universitas Diponegoro  
-**Mata Kuliah:** Pemrograman/Coding
+**Kelas:** E   
+**Mata Kuliah:** Pengkodean
 
 ## Deskripsi Proyek
 Purwarupa aplikasi web Voucher Entri Transaksi Kas Keluar untuk membantu pencatatan transaksi akuntansi secara terstruktur dan menerapkan prinsip pencatatan jurnal berpasangan (*double-entry accounting*).
