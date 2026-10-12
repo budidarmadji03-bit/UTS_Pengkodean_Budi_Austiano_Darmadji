@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voucher Kas Keluar - Sistem Akuntansi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Menyembunyikan panah pada input number jika terpakai di browser tertentu */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-6">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Page Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border border-slate-200 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Voucher Entri Transaksi Kas Keluar
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">Modul Akuntansi Keuangan - Pencatatan Jurnal Umum</p>
+            </div>
+            
+            <!-- Live Indicator -->
+            <div id="live-indicator" class="px-4 py-2 rounded-lg border-2 font-semibold flex items-center gap-2 shadow-sm bg-slate-100 text-slate-800 border-slate-300">
+                <span id="indicator-icon">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </span>
+                <span id="indicator-text">Status Jurnal: BELUM LENGKAP</span>
+            </div>
+        </div>
+
+        <!-- System Messages Container -->
+        <div id="system-message" class="hidden p-4 rounded-lg flex items-center gap-3 transition-all duration-300">
+            <span id="sys-msg-icon"></span>
+            <span id="sys-msg-text" class="font-medium"></span>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <!-- Section 1: Header Info -->
+            <div class="p-6 border-b border-slate-200 bg-slate-50/50">
+                <h2 class="text-lg font-semibold mb-4 text-slate-800 border-b pb-2">1. Informasi Utama Voucher</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Nomor Referensi Voucher <span class="text-rose-500">*</span></label>
+                        <input type="text" id="voucherNo" placeholder="Contoh: BKK-2026-10-001" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase disabled:bg-slate-100 disabled:text-slate-500 header-input">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal Transaksi <span class="text-rose-500">*</span></label>
+                        <input type="date" id="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 header-input">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Metode Pembayaran</label>
+                        <select id="paymentMethod" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 header-input">
+                            <option value="Kas Kecil">Kas Kecil (Petty Cash)</option>
+                            <option value="Transfer Bank BCA" selected>Transfer Bank BCA</option>
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-1">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Penerima Pembayaran (Payee)</label>
+                        <input type="text" id="payee" placeholder="Nama individu atau vendor" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 header-input">
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Keterangan Transaksi</label>
+                        <input type="text" id="description" placeholder="Penjelasan ringkas transaksi untuk keperluan audit" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 header-input">
+                    </div>
+                </div>
+
+                <!-- Header Validation Errors -->
+                <div id="header-errors-container" class="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700 hidden">
+                    <ul id="header-errors-list" class="list-disc pl-5 space-y-1"></ul>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 class="text-lg font-semibold text-slate-800">2. Rincian Jurnal</h2>
+                    <button id="btn-add-line" class="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-100 transition disabled:opacity-50">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Tambah Baris
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto overflow-visible">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-slate-600 bg-slate-100 uppercase border-y border-slate-300">
+                            <tr>
+                                <th class="px-4 py-3 w-12 text-center">No</th>
+                                <th class="px-4 py-3 min-w-[250px]">Pilih Akun</th>
+                                <th class="px-4 py-3 w-48 text-right">Debit (Rp)</th>
+                                <th class="px-4 py-3 w-48 text-right">Kredit (Rp)</th>
+                                <th class="px-4 py-3 w-16 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="journal-lines-body">
+                            <!-- Baris Jurnal akan di-render di sini secara dinamis oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-6 flex flex-col md:flex-row justify-end items-end gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-right">
+                        <div class="text-slate-600 font-medium text-sm mt-1">Total Debit:</div>
+                        <div class="font-semibold text-slate-800 tracking-wide text-lg" id="total-debit">Rp 0</div>
+                        
+                        <div class="text-slate-600 font-medium text-sm mt-1">Total Kredit:</div>
+                        <div class="font-semibold text-slate-800 tracking-wide text-lg" id="total-credit">Rp 0</div>
+                        
+                        <div class="col-span-2 border-t border-slate-300 my-1"></div>
+                        
+                        <div class="font-semibold text-sm mt-1 text-slate-600" id="label-difference">Selisih (Out of Balance):</div>
+                        <div class="font-bold text-xl tracking-wide text-emerald-600" id="total-difference">Rp 0</div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex flex-wrap justify-between items-center border-t border-slate-200 pt-6 gap-4">
+                    <button id="btn-reset" class="px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition disabled:opacity-50 border border-transparent">
+                        Reset Formulir
+                    </button>
+
+                    <div class="flex gap-3">
+                        <button id="btn-draft" class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium shadow-sm transition disabled:opacity-50" title="Simpan sementara meski belum seimbang">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                            Simpan Draft
+                        </button>
+                        <button id="btn-submit" class="flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium shadow-sm transition bg-slate-200 text-slate-500 cursor-not-allowed" disabled title="Jurnal harus valid dan seimbang untuk di-posting">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                            Submit & Post
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal Container (Replaces alert & confirm) -->
+    <div id="custom-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 transform scale-95 transition-transform duration-300" id="modal-content-box">
+            <div class="p-6">
+                <div class="flex items-start gap-4">
+                    <div id="modal-icon-container" class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center">
+                        <!-- Icon disisipkan JS dinamis -->
+                    </div>
+                    <div>
+                        <h3 id="modal-title" class="text-lg font-bold text-slate-900"></h3>
+                        <p id="modal-message" class="text-slate-600 mt-2 text-sm leading-relaxed"></p>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3" id="modal-actions">
+                    <button id="modal-btn-cancel" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium hidden">Batal</button>
+                    <button id="modal-btn-confirm" class="px-4 py-2 rounded-lg font-medium text-white">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulasi Tabel chart_of_accounts dari Database
+        const CHART_OF_ACCOUNTS = [
+            { code: '1-1001', name: 'Kas Kecil', type: 'Asset' },
+            { code: '1-1002', name: 'Bank BCA', type: 'Asset' },
+            { code: '1-2001', name: 'Piutang Usaha', type: 'Asset' },
+            { code: '1-3001', name: 'Persediaan', type: 'Asset' },
+            { code: '2-1001', name: 'Utang Usaha', type: 'Liability' },
+            { code: '2-2001', name: 'Utang Biaya Operasional', type: 'Liability' },
+            { code: '5-1001', name: 'Beban Pembelian/HPP', type: 'Expense' },
+            { code: '6-1001', name: 'Beban Operasional Lainnya', type: 'Expense' }
+        ];
+
+        // State Aplikasi Global
+        let state = {
+            header: {
+                status: 'DRAFT',
+                isPosted: false
+            },
+            lines: [
+                { id: generateId(), accountCode: '', debit: '', credit: '' },
+                { id: generateId(), accountCode: '', debit: '', credit: '' }
+            ],
+            totals: { debit: 0, credit: 0, difference: 0 },
+            validation: {
+                status: 'BELUM LENGKAP', // Enum: SEIMBANG, BELUM SEIMBANG, BELUM LENGKAP, TIDAK VALID
+                errors: [],
+                lineErrors: {}
+            }
+        };
+
+        // DOM Elements Map
+        const DOM = {
+            tbody: document.getElementById('journal-lines-body'),
+            totalDebit: document.getElementById('total-debit'),
+            totalCredit: document.getElementById('total-credit'),
+            totalDiff: document.getElementById('total-difference'),
+            labelDiff: document.getElementById('label-difference'),
+            indicatorBox: document.getElementById('live-indicator'),
+            indicatorIcon: document.getElementById('indicator-icon'),
+            indicatorText: document.getElementById('indicator-text'),
+            headerErrorsContainer: document.getElementById('header-errors-container'),
+            headerErrorsList: document.getElementById('header-errors-list'),
+            sysMsg: document.getElementById('system-message'),
+            sysMsgIcon: document.getElementById('sys-msg-icon'),
+            sysMsgText: document.getElementById('sys-msg-text'),
+            btnSubmit: document.getElementById('btn-submit'),
+            btnDraft: document.getElementById('btn-draft'),
+            btnReset: document.getElementById('btn-reset'),
+            btnAddLine: document.getElementById('btn-add-line'),
+            inputs: {
+                voucherNo: document.getElementById('voucherNo'),
+                date: document.getElementById('date'),
+                paymentMethod: document.getElementById('paymentMethod'),
+                payee: document.getElementById('payee'),
+                description: document.getElementById('description')
+            },
+            modal: {
+                container: document.getElementById('custom-modal'),
+                box: document.getElementById('modal-content-box'),
+                title: document.getElementById('modal-title'),
+                message: document.getElementById('modal-message'),
+                icon: document.getElementById('modal-icon-container'),
+                btnConfirm: document.getElementById('modal-btn-confirm'),
+                btnCancel: document.getElementById('modal-btn-cancel')
+            }
+        };
+
+        // Set Default Date Today
+        DOM.inputs.date.value = new Date().toISOString().split('T')[0];
+
+        // Utilities
+        function generateId() {
+            return Date.now() + Math.floor(Math.random() * 1000);
+        }
+
+        function formatRupiah(value) {
+            if (!value) return '';
+            let numberString = value.toString().replace(/[^,\d]/g, '');
+            let split = numberString.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+            return split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+        }
+
+        function parseRupiah(rupiahString) {
+            if (!rupiahString) return 0;
+            let cleanStr = rupiahString.toString().replace(/\./g, '');
+            return parseInt(cleanStr, 10) || 0;
+        }
+
+        // SVG Icons Strings
+        const Icons = {
+            check: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`,
+            refresh: `<svg class="w-5 h-5 spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>`,
+            alert: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`,
+            error: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+            trash: `<svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`
+        };
+
+        function validateAndCalculate() {
+            let sumDebit = 0;
+            let sumCredit = 0;
+            let errors = [];
+            let lErrors = {};
+            let isComplete = true;
+            let isValid = true;
+
+            // Validasi Header Utama
+            let voucherVal = DOM.inputs.voucherNo.value.trim();
+            let dateVal = DOM.inputs.date.value;
+            
+            if (!voucherVal) {
+                errors.push('Nomor Referensi Voucher wajib diisi.');
+                isComplete = false;
+            }
+            if (!dateVal) {
+                errors.push('Tanggal Transaksi wajib diisi.');
+                isComplete = false;
+            }
+
+            if (state.lines.length < 2) {
+                errors.push('Jurnal harus memiliki minimal 2 baris transaksi.');
+                isValid = false;
+            }
+
+            // Validasi Spesifik Baris (Lines)
+            state.lines.forEach((line) => {
+                let debitVal = parseRupiah(line.debit);
+                let creditVal = parseRupiah(line.credit);
+                let lineErr = [];
+
+                sumDebit += debitVal;
+                sumCredit += creditVal;
+
+                if (!line.accountCode) {
+                    lineErr.push('Akun belum dipilih.');
+                    isComplete = false;
+                }
+                if (debitVal === 0 && creditVal === 0) {
+                    lineErr.push('Nominal Debit atau Kredit harus diisi.');
+                    isComplete = false;
+                }
+                if (debitVal > 0 && creditVal > 0) {
+                    lineErr.push('Debit & Kredit tidak boleh terisi di baris yang sama.');
+                    isValid = false;
+                }
+                if (debitVal < 0 || creditVal < 0) {
+                    lineErr.push('Nominal tidak boleh bernilai negatif.');
+                    isValid = false;
+                }
+
+                if (lineErr.length > 0) {
+                    lErrors[line.id] = lineErr;
+                }
+            });
+
+            let diff = Math.abs(sumDebit - sumCredit);
+            state.totals = { debit: sumDebit, credit: sumCredit, difference: diff };
+            state.validation.lineErrors = lErrors;
+            state.validation.errors = errors;
+
+            // Penentuan Status Validasi Akhir
+            if (!isValid) {
+                state.validation.status = 'TIDAK VALID';
+            } else if (!isComplete) {
+                state.validation.status = 'BELUM LENGKAP';
+            } else if (diff !== 0) {
+                state.validation.status = 'BELUM SEIMBANG';
+            } else if (sumDebit === 0) {
+                state.validation.status = 'BELUM LENGKAP';
+            } else {
+                state.validation.status = 'SEIMBANG';
+            }
+
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update Teks Total
+            DOM.totalDebit.textContent = `Rp ${formatRupiah(state.totals.debit)}`;
+            DOM.totalCredit.textContent = `Rp ${formatRupiah(state.totals.credit)}`;
+            DOM.totalDiff.textContent = `Rp ${formatRupiah(state.totals.difference)}`;
+
+            if (state.totals.difference === 0 && state.totals.debit > 0) {
+                DOM.totalDiff.className = 'font-bold text-xl tracking-wide text-emerald-600';
+                DOM.labelDiff.className = 'font-semibold text-sm mt-1 text-slate-600';
+            } else {
+                DOM.totalDiff.className = 'font-bold text-xl tracking-wide text-rose-600';
+                DOM.labelDiff.className = 'font-semibold text-sm mt-1 text-rose-600';
+            }
+
+            // Update Tampilan Indikator Keseimbangan (Live Balanced Indicator)
+            DOM.indicatorText.textContent = `Status Jurnal: ${state.validation.status}`;
+            DOM.indicatorBox.className = 'px-4 py-2 rounded-lg border-2 font-semibold flex items-center gap-2 shadow-sm transition-colors duration-300 ';
+            
+            switch (state.validation.status) {
+                case 'SEIMBANG':
+                    DOM.indicatorBox.className += 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                    DOM.indicatorIcon.innerHTML = Icons.check;
+                    break;
+                case 'BELUM SEIMBANG':
+                    DOM.indicatorBox.className += 'bg-amber-100 text-amber-800 border-amber-300';
+                    DOM.indicatorIcon.innerHTML = Icons.refresh;
+                    break;
+                case 'TIDAK VALID':
+                    DOM.indicatorBox.className += 'bg-rose-100 text-rose-800 border-rose-300';
+                    DOM.indicatorIcon.innerHTML = Icons.error;
+                    break;
+                default: // BELUM LENGKAP
+                    DOM.indicatorBox.className += 'bg-slate-100 text-slate-800 border-slate-300';
+                    DOM.indicatorIcon.innerHTML = Icons.alert;
+                    break;
+            }
+
+            // Mengontrol visibilitas error header
+            if (state.validation.errors.length > 0 && (state.validation.status !== 'BELUM LENGKAP' || state.lines.some(l => l.accountCode !== ''))) {
+                DOM.headerErrorsList.innerHTML = state.validation.errors.map(err => `<li>${err}</li>`).join('');
+                DOM.headerErrorsContainer.classList.remove('hidden');
+            } else {
+                DOM.headerErrorsContainer.classList.add('hidden');
+            }
+
+            // Mengontrol Status Tombol Aksi
+            if (state.header.isPosted) {
+                DOM.btnSubmit.disabled = true;
+                DOM.btnSubmit.className = "flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium shadow-sm transition bg-slate-200 text-slate-500 cursor-not-allowed";
+                DOM.btnDraft.disabled = true;
+                DOM.btnReset.disabled = true;
+                DOM.btnAddLine.disabled = true;
+                document.querySelectorAll('.header-input').forEach(el => el.disabled = true);
+            } else {
+                if (state.validation.status === 'SEIMBANG') {
+                    DOM.btnSubmit.disabled = false;
+                    DOM.btnSubmit.className = "flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium shadow-sm transition bg-blue-600 hover:bg-blue-700 text-white cursor-pointer";
+                } else {
+                    DOM.btnSubmit.disabled = true;
+                    DOM.btnSubmit.className = "flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium shadow-sm transition bg-slate-200 text-slate-500 cursor-not-allowed";
+                }
+                DOM.btnDraft.disabled = DOM.inputs.voucherNo.value.trim() === '';
+            }
+
+            // Update pesan error di masing-masing baris jurnal
+            state.lines.forEach(line => {
+                let errRow = document.getElementById(`err-${line.id}`);
+                let trRow = document.getElementById(`tr-${line.id}`);
+                if (errRow && trRow) {
+                    if (state.validation.lineErrors[line.id]) {
+                        errRow.innerHTML = `<td colspan="5" class="px-4 py-1.5 text-xs text-rose-600 bg-rose-50 border-b border-rose-100 text-right font-medium">${state.validation.lineErrors[line.id].join(' | ')}</td>`;
+                        errRow.classList.remove('hidden');
+                        trRow.classList.add('bg-rose-50/30');
+                        trRow.classList.remove('hover:bg-slate-50');
+                    } else {
+                        errRow.classList.add('hidden');
+                        trRow.classList.remove('bg-rose-50/30');
+                        trRow.classList.add('hover:bg-slate-50');
+                    }
+                }
+            });
+        }
+
+        // Membangun Ulang DOM Tabel Hanya Saat Baris Ditambah/Dihapus (Re-render)
+        function renderTableRows() {
+            let html = '';
+            let optionsHTML = `<option value="">-- Pilih Akun --</option>` + 
+                CHART_OF_ACCOUNTS.map(acc => `<option value="${acc.code}">[${acc.code}] ${acc.name}</option>`).join('');
+
+            state.lines.forEach((line, index) => {
+                let isDisabled = state.header.isPosted ? 'disabled' : '';
+                let debitDisabled = (state.header.isPosted || line.credit !== '') ? 'disabled' : '';
+                let creditDisabled = (state.header.isPosted || line.debit !== '') ? 'disabled' : '';
+                let delDisabled = state.header.isPosted ? 'disabled' : '';
+                let delOpacity = state.header.isPosted ? 'opacity-30 cursor-not-allowed' : 'hover:bg-rose-100 hover:text-rose-700 cursor-pointer';
+
+                html += `
+                <tr id="tr-${line.id}" class="border-b transition-colors hover:bg-slate-50">
+                    <td class="px-4 py-3 text-center font-medium text-slate-500">${index + 1}</td>
+                    <td class="px-4 py-3">
+                        <select data-id="${line.id}" data-field="accountCode" class="row-input w-full px-2 py-1.5 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 text-sm" ${isDisabled}>
+                            ${optionsHTML}
+                        </select>
+                    </td>
+                    <td class="px-4 py-3">
+                        <input type="text" data-id="${line.id}" data-field="debit" value="${line.debit}" placeholder="0" class="row-input w-full px-2 py-1.5 text-right border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-400" ${debitDisabled}>
+                    </td>
+                    <td class="px-4 py-3">
+                        <input type="text" data-id="${line.id}" data-field="credit" value="${line.credit}" placeholder="0" class="row-input w-full px-2 py-1.5 text-right border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-400" ${creditDisabled}>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <button type="button" data-action="delete" data-id="${line.id}" class="text-rose-500 p-1.5 rounded transition ${delOpacity}" title="Hapus Baris" ${delDisabled}>
+                            ${Icons.trash}
+                        </button>
+                    </td>
+                </tr>
+                <tr id="err-${line.id}" class="hidden"></tr>
+                `;
+            });
+            DOM.tbody.innerHTML = html;
+
+            // Set ulang value select karena innerHTML
+            state.lines.forEach(line => {
+                let select = document.querySelector(`select[data-id="${line.id}"]`);
+                if (select) select.value = line.accountCode;
+            });
+
+            validateAndCalculate();
+        }
+
+        // Fungsi Kustom Modal pengganti alert() dan confirm()
+        function showModal(title, message, type = 'alert', onConfirm = null) {
+            DOM.modal.title.textContent = title;
+            DOM.modal.message.textContent = message;
+            
+            if (type === 'confirm') {
+                DOM.modal.icon.className = 'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-amber-100 text-amber-600';
+                DOM.modal.icon.innerHTML = Icons.alert;
+                DOM.modal.btnCancel.classList.remove('hidden');
+                DOM.modal.btnConfirm.className = 'px-4 py-2 rounded-lg font-medium text-white bg-amber-600 hover:bg-amber-700 transition';
+                DOM.modal.btnConfirm.textContent = 'Ya, Lanjutkan';
+            } else {
+                DOM.modal.icon.className = 'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-blue-100 text-blue-600';
+                DOM.modal.icon.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                DOM.modal.btnCancel.classList.add('hidden');
+                DOM.modal.btnConfirm.className = 'px-4 py-2 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 transition';
+                DOM.modal.btnConfirm.textContent = 'Tutup';
+            }
+
+            DOM.modal.container.classList.remove('hidden');
+            // Sedikit delay untuk transisi animasi opacity tailwind
+            setTimeout(() => {
+                DOM.modal.container.classList.remove('opacity-0');
+                DOM.modal.box.classList.remove('scale-95');
+            }, 10);
+
+            const closeAndClean = () => {
+                DOM.modal.container.classList.add('opacity-0');
+                DOM.modal.box.classList.add('scale-95');
+                setTimeout(() => DOM.modal.container.classList.add('hidden'), 300);
+                DOM.modal.btnConfirm.onclick = null;
+                DOM.modal.btnCancel.onclick = null;
+            };
+
+            DOM.modal.btnCancel.onclick = closeAndClean;
+            DOM.modal.btnConfirm.onclick = () => {
+                if (onConfirm) onConfirm();
+                closeAndClean();
+            };
+        }
+
+        function showSystemMessage(text, type = 'success', autohide = true) {
+            DOM.sysMsg.classList.remove('hidden');
+            DOM.sysMsgText.textContent = text;
+            
+            if (type === 'loading') {
+                DOM.sysMsg.className = 'p-4 rounded-lg flex items-center gap-3 transition-all duration-300 bg-blue-50 text-blue-800 border border-blue-200';
+                DOM.sysMsgIcon.innerHTML = Icons.refresh;
+            } else {
+                DOM.sysMsg.className = 'p-4 rounded-lg flex items-center gap-3 transition-all duration-300 bg-emerald-50 text-emerald-800 border border-emerald-200';
+                DOM.sysMsgIcon.innerHTML = Icons.check;
+            }
+
+            if (autohide) {
+                setTimeout(() => DOM.sysMsg.classList.add('hidden'), 4000);
+            }
+        }
+
+        // Event delegation untuk Tabel Jurnal (Input, Select, Delete) agar tidak kehilangan fokus
+        DOM.tbody.addEventListener('input', (e) => {
+            if (e.target.classList.contains('row-input')) {
+                let id = parseInt(e.target.getAttribute('data-id'));
+                let field = e.target.getAttribute('data-field');
+                let rawValue = e.target.value;
+
+                let lineIndex = state.lines.findIndex(l => l.id === id);
+                if (lineIndex === -1) return;
+
+                if (field === 'debit' || field === 'credit') {
+                    // Tolak input negatif secara instan
+                    if (rawValue.includes('-')) {
+                        e.target.value = e.target.value.replace('-', '');
+                        rawValue = e.target.value;
+                    }
+                    
+                    let formatted = formatRupiah(rawValue);
+                    e.target.value = formatted; // Update view segera
+                    state.lines[lineIndex][field] = formatted;
+
+                    // Mengatur disable sisi sebaliknya secara dinamis via DOM traversal (Optimasi Performa)
+                    let tr = document.getElementById(`tr-${id}`);
+                    let inpDebit = tr.querySelector(`input[data-field="debit"]`);
+                    let inpCredit = tr.querySelector(`input[data-field="credit"]`);
+
+                    if (field === 'debit') {
+                        if (parseRupiah(formatted) > 0) {
+                            state.lines[lineIndex].credit = '';
+                            inpCredit.value = '';
+                            inpCredit.disabled = true;
+                        } else {
+                            inpCredit.disabled = false;
+                        }
+                    } else if (field === 'credit') {
+                        if (parseRupiah(formatted) > 0) {
+                            state.lines[lineIndex].debit = '';
+                            inpDebit.value = '';
+                            inpDebit.disabled = true;
+                        } else {
+                            inpDebit.disabled = false;
+                        }
+                    }
+                } else {
+                    state.lines[lineIndex][field] = rawValue;
+                }
+
+                validateAndCalculate();
+            }
+        });
+
+        DOM.tbody.addEventListener('click', (e) => {
+            let btn = e.target.closest('button[data-action="delete"]');
+            if (btn) {
+                if (state.header.isPosted) return;
+                if (state.lines.length <= 2) {
+                    showModal("Aksi Ditolak", "Tidak dapat menghapus baris. Transaksi berpasangan minimal membutuhkan 2 baris jurnal.");
+                    return;
+                }
+                let id = parseInt(btn.getAttribute('data-id'));
+                state.lines = state.lines.filter(l => l.id !== id);
+                renderTableRows();
+            }
+        });
+
+        // Trigger validasi saat input header berubah
+        Object.values(DOM.inputs).forEach(input => {
+            input.addEventListener('input', validateAndCalculate);
+        });
+
+        DOM.btnAddLine.addEventListener('click', () => {
+            if (state.header.isPosted) return;
+            state.lines.push({ id: generateId(), accountCode: '', debit: '', credit: '' });
+            renderTableRows();
+        });
+
+        DOM.btnReset.addEventListener('click', () => {
+            if (state.header.isPosted) return;
+            showModal("Konfirmasi Reset", "Anda yakin ingin mereset formulir ini? Semua data yang belum tersimpan akan hilang.", "confirm", () => {
+                Object.values(DOM.inputs).forEach(inp => {
+                    if (inp.id !== 'date' && inp.id !== 'paymentMethod') inp.value = '';
+                });
+                DOM.inputs.date.value = new Date().toISOString().split('T')[0];
+                DOM.inputs.paymentMethod.value = 'Transfer Bank BCA';
+                
+                state.lines = [
+                    { id: generateId(), accountCode: '', debit: '', credit: '' },
+                    { id: generateId(), accountCode: '', debit: '', credit: '' }
+                ];
+                renderTableRows();
+                DOM.sysMsg.classList.add('hidden');
+            });
+        });
+
+        function handleTransactionAction(actionType) {
+            let txtNo = DOM.inputs.voucherNo.value.trim().toUpperCase();
+            DOM.inputs.voucherNo.value = txtNo; 
+            
+            showSystemMessage('Berkomunikasi dengan server database...', 'loading', false);
+            
+            // Kunci sesaat tombol aksi agar tidak double-click
+            DOM.btnSubmit.disabled = true;
+            DOM.btnDraft.disabled = true;
+            DOM.btnReset.disabled = true;
+
+            setTimeout(() => {
+                // Data jejak audit yang disimulasikan sebagai respons backend/Supabase
+                let auditData = {
+                    created_by: 'user_akuntansi_01', 
+                    created_at: new Date().toISOString(),
+                    hash_checksum: 'sha256_mock_' + Math.random().toString(36).substring(2,10)
+                };
+
+                if (actionType === 'DRAFT') {
+                    showSystemMessage(`Draft Voucher ${txtNo} berhasil disimpan ke database.`);
+                    DOM.btnSubmit.disabled = (state.validation.status !== 'SEIMBANG');
+                    DOM.btnDraft.disabled = false;
+                    DOM.btnReset.disabled = false;
+                } else if (actionType === 'POST') {
+                    state.header.isPosted = true;
+                    showSystemMessage(`Voucher ${txtNo} berhasil POSTING. Integrity Hash: ${auditData.hash_checksum}`);
+                    DOM.inputs.voucherNo.disabled = true;
+                    renderTableRows(); // Re-render untuk me-lock seluruh input baris
+                }
+            }, 1200);
+        }
+
+        DOM.btnDraft.addEventListener('click', () => {
+            if (!DOM.inputs.voucherNo.value.trim()) return;
+            handleTransactionAction('DRAFT');
+        });
+
+        DOM.btnSubmit.addEventListener('click', () => {
+            if (state.validation.status !== 'SEIMBANG') return;
+            showModal("Konfirmasi Posting", `Anda akan memposting voucher ${DOM.inputs.voucherNo.value.trim().toUpperCase()} ke Buku Besar. Transaksi yang diposting TIDAK DAPAT diubah atau dihapus, melainkan harus dikoreksi menggunakan jurnal pembalik. Lanjutkan?`, "confirm", () => {
+                handleTransactionAction('POST');
+            });
+        });
+
+        // Inisialisasi tampilan awal
+        renderTableRows();
+    </script>
+</body>
+</html>
